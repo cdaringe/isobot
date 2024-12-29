@@ -1,0 +1,43 @@
+{
+  "name": "isobot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "wireit"
+  },
+  "wireit": {
+    "build": {
+      "command": "tsc"
+    }
+  },
+  "keywords": [
+    "github",
+    "bot",
+    "probot"
+  ],
+  "author": "cdaringe",
+  "license": "ISC",
+  "peerDependencies": {
+    "probot": "^13.4.1"
+  },
+  "devDependencies": {
+    "probot": "13.4.1",
+    "typescript": "5.7.2",
+    "vitest": "2.1.8",
+    "wireit": "0.14.9"
+  },
+  "dependencies": {
+    "@octokit/openapi-webhooks-types": "8.5.1",
+    "@octokit/rest": "^21.0.2",
+    "@octokit/types": "^13.6.2",
+    "@octokit/webhooks": "^13.4.1",
+    "p-queue": "6",
+    "primitivify": "^3.0.1",
+    "rxjs": "^7.8.1",
+    "tmp-promise": "^3.0.3",
+    "ts-results": "^3.3.0",
+    "tsx": "4.19.2",
+    "utility-types": "^3.11.0"
+  }
+}
