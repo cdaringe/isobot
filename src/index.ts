@@ -1,143 +1,61 @@
-import {
-  EmitterWebhookEvent,
-  EmitterWebhookEventName,
-} from "@octokit/webhooks";
-import * as operators from "rxjs/operators";
-import { Endpoints } from "@octokit/types";
-import { components as WebhookComponent } from "@octokit/openapi-webhooks-types";
+import { EmitterWebhookEvent } from "@octokit/webhooks";
 import { cpus } from "os";
-import { DeepPartial } from "utility-types";
 import { file } from "tmp-promise";
 import * as fs from "node:fs/promises";
-import { Observable, of } from "rxjs";
 import { Probot, ProbotOctokit } from "probot";
 import PQueue from "p-queue";
-import { IsolateResult, runInIsolateInfallible } from "./isolate";
-import { Err, Ok, Result } from "ts-results";
+import { IsolateResult, runInIsolateInfallible } from "./isolate.js";
+import { Err, Ok, Result } from "ts-results-es";
+import { EventEmitter } from "node:events";
+import { isolateEntrypointFilename } from "./paths.js";
+import { Pipeline } from "./pipeline.js";
 
-type GHPullRequest =
-  Endpoints["GET /repos/{owner}/{repo}/pulls/{pull_number}"]["response"]["data"];
+export type ResultEmitter = EventEmitter<{ result: [PipelineResult] }>;
+type ListenOptions = { emitter?: ResultEmitter };
 
-type PipelineEvent<
-  TName extends EmitterWebhookEventName,
-  Ctx = {}
-> = EmitterWebhookEvent<TName> & {
-  ctx: Ctx;
-  tk: typeof tk;
-};
-
-type AnyPipelineEvent = PipelineEvent<
-  EmitterWebhookEventName,
-  Record<string, any>
->;
-
-type UpdateCtx<TEvent, NewCtx> = TEvent extends PipelineEvent<
-  infer TName,
-  infer TCtx
->
-  ? PipelineEvent<TName, TCtx & NewCtx>
-  : never;
-
-const updateCtx = <TEvent extends AnyPipelineEvent, NewCtx extends {}>(
-  { ctx: prevContext, ...evt }: TEvent,
-  newCtx: NewCtx
-): PipelineEvent<TEvent["name"], TEvent["ctx"] & NewCtx> =>
-  ({
-    ...evt,
-    ctx: {
-      ...prevContext,
-      ...newCtx,
-    },
-  } as unknown as PipelineEvent<TEvent["name"], TEvent["ctx"] & NewCtx>);
-
-const tk = {
-  gh: {
-    withPR: async <E extends AnyPipelineEvent>(evt: E, prId: number) => {
-      const pr =
-        evt.name === "pull_request" &&
-        typeof evt.payload.pull_request.id === "number"
-          ? evt.payload.pull_request
-          : ({} as GHPullRequest); // @todo getPullRequest(prId)
-      return updateCtx(evt, { pr });
-    },
-    withPRComments: async <
-      E extends AnyPipelineEvent & { ctx: { pr: { id: number } } }
-    >(
-      evt: E,
-      prId: number
-    ) =>
-      updateCtx(evt, {
-        prComments: [{ id: prId, message: "merge this!" }],
-      }),
-    approvePR: async <E extends AnyPipelineEvent>(evt: E, prId: number) =>
-      updateCtx(evt, { approved: true }),
-    mergePR: async <E extends AnyPipelineEvent>(evt: E, prId: number) =>
-      updateCtx(evt, { merged: true }),
-  },
-  filter:
-    <UName extends EmitterWebhookEventName>(name: UName) =>
-    <E extends AnyPipelineEvent>(evt: E): evt is E =>
-      evt.name === name,
-  collection: {
-    last: <T>(arr: T[]): T | undefined => arr[arr.length - 1],
-  },
-};
-
-export const fromDeepPartial = <T>(x: DeepPartial<T>): T => x as T;
-
-// Example event
-const exampleEvent: PipelineEvent<"issue_comment", { pr: { id: number } }> = {
-  id: "test-event-id",
-  name: "issue_comment",
-  payload: fromDeepPartial<
-    WebhookComponent["schemas"]["webhook-issue-comment-created"]
-  >({
-    action: "created",
-    comment: {
-      body: "foo",
-      created_at: "",
-      html_url: "",
-    },
-  }),
-  ctx: { pr: { id: 42 } },
-  tk,
-};
-
-export const listen = (app: Probot) => {
-  const concurrency = Math.max(1, cpus().length - 1);
-  const queue = new PQueue({ concurrency });
-  app.onAny((event) =>
-    queue.add(async () => {
-      const { path: isofilename, cleanup } = await file();
-      try {
-        const result = await attemptPipeline(event as EmitterWebhookEvent, {
-          isofilename,
-        });
-        result.ok ? app.log.info(result.val) : app.log.error(result.val);
-      } finally {
-        cleanup().catch(() => null);
-      }
-    })
-  );
-};
+export const createListener =
+  (opts: ListenOptions = {}) =>
+  (app: Probot) => {
+    const { emitter } = opts;
+    const concurrency = Math.max(1, cpus().length - 1);
+    const queue = new PQueue({ concurrency });
+    app.onAny((event) =>
+      queue.add(async () => {
+        const { path: isofilename, cleanup } = await file({ postfix: ".ts" });
+        try {
+          const result = await attemptPipeline(event as EmitterWebhookEvent, {
+            isofilename,
+            probot: app,
+          });
+          result.isOk()
+            ? app.log.info(result.value)
+            : app.log.error(result.error);
+          emitter?.emit("result", result);
+        } finally {
+          cleanup().catch(() => null);
+        }
+      })
+    );
+  };
 
 type RepoContext = { repo: string; owner: string; ref: string };
+export type PipelineResult = Result<
+  | { status: "SKIPPED"; repoContext?: RepoContext; message?: string }
+  | {
+      status: "HALTED";
+      repoContext?: RepoContext;
+      isolateResult: IsolateResult;
+    },
+  { repoContext?: RepoContext; message: string }
+>;
+
 const attemptPipeline = async (
   event: EmitterWebhookEvent,
   opts: {
     isofilename: string;
+    probot?: Probot;
   }
-): Promise<
-  Result<
-    | { status: "SKIPPED"; repoContext?: RepoContext; message?: string }
-    | {
-        status: "HALTED";
-        repoContext?: RepoContext;
-        isolateResult: IsolateResult;
-      },
-    { repoContext?: RepoContext; message: string }
-  >
-> => {
+): Promise<PipelineResult> => {
   const context = event.payload;
   if (!("repository" in context)) {
     return new Ok({ status: "SKIPPED", message: "missing repository" });
@@ -146,10 +64,10 @@ const attemptPipeline = async (
     return new Ok({ status: "SKIPPED", message: "missing owner" });
   }
 
-  if (!("octokit" in context)) {
+  if (!("octokit" in event)) {
     return new Ok({ status: "SKIPPED", message: "missing octokit" });
   }
-  const octokit = context.octokit as ProbotOctokit;
+  const octokit = event.octokit as ProbotOctokit;
 
   const owner = context.repository.owner.login;
   const repo = context.repository.name;
@@ -197,40 +115,32 @@ const attemptPipeline = async (
         })
     );
 
-  if (isofileReadyResult.err) {
+  if (isofileReadyResult.isErr()) {
     return isofileReadyResult;
   }
 
-  const isolateResult = await runInIsolateInfallible(opts.isofilename, context);
+  const isolateResult = await runInIsolateInfallible({
+    entrypointFilename: isolateEntrypointFilename,
+    eventPayload: context,
+    isoFilename: opts.isofilename,
+    logger: opts.probot?.log,
+  });
 
   return new Ok({ status: "HALTED", repoContext, isolateResult });
 };
-
-interface PipelineResourceRxjs {
-  rxjs: {
-    operators: typeof operators;
-  };
-}
-
-interface PipelineResources extends PipelineResourceRxjs {}
-
-export type Pipeline = (
-  stream: Observable<AnyPipelineEvent>,
-  resources: PipelineResources
-) => Observable<any>;
 
 export const pipeline: Pipeline = (
   stream,
   {
     rxjs: {
-      operators: { filter, mergeMap: andThen },
+      operators: { filter, mergeMap },
     },
   }
 ) =>
   stream.pipe(
     filter((evt) => evt.name === "issue_comment"),
-    andThen((evt) => evt.tk.gh.withPR(evt, evt.payload.issue.id)),
-    andThen((evt) => evt.tk.gh.withPRComments(evt, evt.ctx.pr.id)),
-    andThen((evt) => evt.tk.gh.approvePR(evt, evt.ctx.pr.id)),
-    andThen((evt) => evt.tk.gh.mergePR(evt, evt.ctx.pr.id))
+    mergeMap((evt) => evt.tk.gh.withPR(evt, evt.payload.issue.id)),
+    mergeMap((evt) => evt.tk.gh.withPRComments(evt, evt.ctx.pr.id)),
+    mergeMap((evt) => evt.tk.gh.approvePR(evt, evt.ctx.pr.id)),
+    mergeMap((evt) => evt.tk.gh.mergePR(evt, evt.ctx.pr.id))
   );

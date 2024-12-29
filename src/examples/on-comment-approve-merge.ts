@@ -1,15 +1,19 @@
-// import { filter, mergeMap } from "rxjs/operators";
-// import { Pipeline } from "..";
+import type { Pipeline } from "../pipeline.js";
 
-// export const pipeline: Pipeline = (stream) =>
-//   stream
-//     .pipe(
-//       filter((evt) => evt.tk.filter("pull_request_review.created")(evt)),
-//       mergeMap((evt) => evt.tk.gh.withPRComments(evt, evt.ctx.pr.id)),
-//       mergeMap((evt) => evt.tk.gh.approvePR(evt)),
-//       mergeMap((evt) => evt.tk.gh.mergePR(evt))
-//     )
-//     .subscribe((event) => {
-//       console.log(event.ctx);
-//       // Output: { pr: { id: 42 }, prComments: [...], approved: true, merged: true }
-//     });
+export const __filename = new URL(import.meta.url).pathname;
+
+export const pipeline: Pipeline = (
+  stream,
+  {
+    rxjs: {
+      operators: { filter, mergeMap },
+    },
+  }
+) =>
+  stream.pipe(
+    filter((evt) => evt.name === "issue_comment"),
+    mergeMap((evt) => evt.tk.gh.withPR(evt, evt.payload.issue.id)),
+    mergeMap((evt) => evt.tk.gh.withPRComments(evt, evt.ctx.pr.id)),
+    mergeMap((evt) => evt.tk.gh.approvePR(evt, evt.ctx.pr.id)),
+    mergeMap((evt) => evt.tk.gh.mergePR(evt, evt.ctx.pr.id))
+  );

@@ -3,7 +3,7 @@
  * We use this to not have to re-create complex resources in the isolate, such
  * as the GitHub API.
  */
-import { randomUUID } from "crypto";
+import { randomUUID } from "node:crypto";
 
 // Message protocol
 type RPCRequest = {
