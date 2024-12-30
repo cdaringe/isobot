@@ -1,15 +1,14 @@
 import { Err, Ok, Result } from "ts-results-es";
-import { AnyPipelineEvent, Pipeline, tk } from "./pipeline.js";
+import { AnyPipelineEvent, Pipeline, createToolkit } from "./pipeline.js";
 import { Logger } from "probot";
 import * as vm from "node:vm";
 import * as operators from "rxjs/operators";
-import { deepFreeze } from "../utils/collection.js";
+import { deepFreeze } from "./utils/collection.js";
 import * as rxjs from "rxjs";
 import { primitivify } from "primitivify";
 import assert from "node:assert";
 import { Code } from "./code.js";
 
-const deepFrozenTk = deepFreeze(tk);
 const deepFrozenRxjs = deepFreeze(rxjs);
 const deepFrozenOperators = deepFreeze(operators);
 
@@ -38,7 +37,7 @@ export const runInIsolateInfallible = async ({
     URL,
     logger,
     pipelineParams: [
-      rxjs.of({ ...pipelineEvent, tk: deepFrozenTk, ctx: {} }),
+      rxjs.of(pipelineEvent),
       {
         primitivify,
         rxjs: {
@@ -85,7 +84,12 @@ return observable
         }
         return new Ok(v);
       },
-      (err) => new Err(`pipeline run failed: ${String(err)}`)
+      (err) =>
+        new Err(
+          `pipeline run failed: ${
+            err instanceof Error ? err.stack || String(err) : String(err)
+          }`
+        )
     );
 };
 

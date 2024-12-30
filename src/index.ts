@@ -4,12 +4,12 @@ import { file } from "tmp-promise";
 import { Logger, Probot, ProbotOctokit } from "probot";
 import PQueue from "p-queue";
 import { IsolateResult, runInIsolateInfallible } from "./isolate.js";
-import { Err, Ok, Result, ResultErrType, ResultOkType } from "ts-results-es";
+import { Err, Ok, Result, ResultOkType } from "ts-results-es";
 import { EventEmitter } from "node:events";
-import { AnyPipelineEvent, Pipeline, tk } from "./pipeline.js";
-import esbuild from "esbuild";
-import { deepFreeze } from "../utils/collection.js";
+import { AnyPipelineEvent, createToolkit, Pipeline } from "./pipeline.js";
+import { deepFreeze } from "./utils/collection.js";
 import { Code } from "./code.js";
+import { RepoContext } from "./utils/github.js";
 
 export type ResultEmitter = EventEmitter<{ result: [PipelineResult] }>;
 type ListenOptions = { emitter?: ResultEmitter; log?: Logger };
@@ -33,10 +33,13 @@ export const createListener =
               ? app.log.info({
                   status: result.value.status,
                   repoContext: result.value.repoContext,
+                  eventName: event.name,
                 })
               : app.log.error({
+                  eventName: event.name,
                   status: result.error.status,
                   repoContext: result.error.repoContext,
+                  message: result.error.message,
                 });
             emitter?.emit("result", result);
           })
@@ -45,7 +48,6 @@ export const createListener =
     );
   };
 
-type RepoContext = { repo: string; owner: string; ref: string };
 export type PipelineResult = Result<
   | {
       status: "SKIPPED";
@@ -133,7 +135,7 @@ const attemptPipeline = async (
   const pipelineEvent: AnyPipelineEvent = deepFreeze({
     ...event,
     ctx: {},
-    tk: tk,
+    tk: createToolkit({ octokit, repoContext }),
   });
 
   const isolateResult = await runInIsolateInfallible({

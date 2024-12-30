@@ -5,49 +5,107 @@ import {
   EmitterWebhookEventName,
 } from "@octokit/webhooks";
 import { Endpoints } from "@octokit/types";
+import { ProbotOctokit } from "probot";
+import { RepoContext } from "./utils/github.js";
 
 type GHPullRequest =
   Endpoints["GET /repos/{owner}/{repo}/pulls/{pull_number}"]["response"]["data"];
 
-export const tk = {
+export const createToolkit = ({
+  octokit,
+  repoContext,
+}: {
+  octokit: ProbotOctokit;
+  repoContext: RepoContext;
+}) => ({
   gh: {
-    withPR: async <E extends AnyPipelineEvent>(evt: E, prId: number) => {
+    withPR: async <E extends AnyBasicPipelineEvent>(
+      evt: E,
+      pull_number: number
+    ) => {
       const pr =
         evt.name === "pull_request" &&
         typeof evt.payload.pull_request.id === "number"
           ? evt.payload.pull_request
-          : ({} as GHPullRequest); // @todo getPullRequest(prId)
+          : await octokit.pulls
+              .get({ pull_number, ...repoContext })
+              .then((it) => it.data);
       return updateCtx(evt, { pr });
     },
-    withPRComments: async <
-      E extends AnyPipelineEvent & { ctx: { pr: { id: number } } }
-    >(
+    withPRComments: async <E extends AnyBasicPipelineEvent>(
       evt: E,
-      prId: number
+      pull_number: number
     ) =>
       updateCtx(evt, {
-        prComments: [{ id: prId, message: "merge this!" }],
+        prComments: await octokit.issues
+          .listComments({
+            issue_number: pull_number,
+            ...repoContext,
+          })
+          .then((it) => it.data),
       }),
-    approvePR: async <E extends AnyPipelineEvent>(evt: E, prId: number) =>
-      updateCtx(evt, { approved: true }),
-    mergePR: async <E extends AnyPipelineEvent>(evt: E, prId: number) =>
-      updateCtx(evt, { merged: true }),
+    approvePR: async <E extends AnyBasicPipelineEvent>(
+      evt: E,
+      pull_number: number
+    ) =>
+      octokit.pulls
+        .listReviews({ pull_number, ...repoContext })
+        .then(async (it) => {
+          const existingBotReview = it.data.find((it) =>
+            it.user?.login.match(/isobot/)
+          );
+          if (existingBotReview) {
+            return existingBotReview;
+          }
+          return octokit.pulls
+            .createReview({ pull_number, ...repoContext })
+            .then((it) => it.data);
+        })
+
+        .then((it) =>
+          it.state !== "APPROVED"
+            ? octokit.pulls.submitReview({
+                pull_number,
+                event: "APPROVE",
+                review_id: it.id,
+                ...repoContext,
+              })
+            : null
+        )
+        .then((it) => updateCtx(evt, { approved: true })),
+    mergePR: async <E extends AnyBasicPipelineEvent>(
+      evt: E,
+      pull_number: number
+    ) =>
+      octokit.pulls
+        .merge({ pull_number, ...repoContext })
+        .then((__) => updateCtx(evt, { merged: true })),
   },
   filter:
     <UName extends EmitterWebhookEventName>(name: UName) =>
-    <E extends AnyPipelineEvent>(evt: E): evt is E =>
+    <E extends AnyBasicPipelineEvent>(evt: E): evt is E =>
       evt.name === name,
   collection: {
     last: <T>(arr: T[]): T | undefined => arr[arr.length - 1],
   },
-};
+});
 
-type PipelineEvent<
+type Toolkit = ReturnType<typeof createToolkit>;
+
+type BasicPipelineEvent<
   TName extends EmitterWebhookEventName,
   Ctx = {}
 > = EmitterWebhookEvent<TName> & {
   ctx: Ctx;
-  tk: typeof tk;
+};
+
+type AnyBasicPipelineEvent = BasicPipelineEvent<any, any>;
+
+type PipelineEvent<
+  TName extends EmitterWebhookEventName,
+  Ctx = {}
+> = BasicPipelineEvent<TName, Ctx> & {
+  tk: Toolkit;
 };
 
 export type AnyPipelineEvent = PipelineEvent<
@@ -75,7 +133,7 @@ type UpdateCtx<TEvent, NewCtx> = TEvent extends PipelineEvent<
   ? PipelineEvent<TName, TCtx & NewCtx>
   : never;
 
-const updateCtx = <TEvent extends AnyPipelineEvent, NewCtx extends {}>(
+const updateCtx = <TEvent extends AnyBasicPipelineEvent, NewCtx extends {}>(
   { ctx: prevContext, ...evt }: TEvent,
   newCtx: NewCtx
 ): PipelineEvent<TEvent["name"], TEvent["ctx"] & NewCtx> =>

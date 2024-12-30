@@ -43,9 +43,6 @@ test("runs isolate yields pipeline event - error with pipeline", async (t) => {
   if (out.isOk()) {
     t.fail("invalid pipeline should not have succeeded");
   } else {
-    t.is(
-      out.error,
-      "pipeline run failed: AssertionError [ERR_ASSERTION]: expected pipeline function export"
-    );
+    t.regex(out.error, /expected pipeline function export/);
   }
 });

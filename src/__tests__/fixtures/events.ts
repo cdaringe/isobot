@@ -1,6 +1,8 @@
-import { ExtractWithName, fromDeepPartial } from "../../../utils/typescript.js";
+import { ExtractWithName, fromDeepPartial } from "../../utils/typescript.js";
 import type { EmitterWebhookEvent as WebhookEvent } from "@octokit/webhooks";
-import { AnyPipelineEvent } from "../../pipeline.js";
+import { AnyPipelineEvent, createToolkit } from "../../pipeline.js";
+import { getProbot } from "./probot.js";
+import { ProbotOctokit } from "probot";
 
 type IssueCommentEvent = ExtractWithName<WebhookEvent, "issue_comment">;
 
@@ -9,7 +11,10 @@ export const asPipelineEvent = <E extends WebhookEvent>(
 ): AnyPipelineEvent => ({
   ...evt,
   ctx: {},
-  tk: {} as any,
+  tk: createToolkit({
+    octokit: new ProbotOctokit({}),
+    repoContext: { repo: "repo", owner: "owner", ref: "main" },
+  }),
 });
 
 export const issue_comment_created = fromDeepPartial<IssueCommentEvent>({
