@@ -51,7 +51,6 @@ test("fetches isobot.ts file when receiving webhook", async (t) => {
       });
     })
   );
-  // '/repos/{owner}/{repo}/contents/{path}'
   await t.context.server.listen();
 
   t.context.probot.receive(eventsFixture.issue_comment_created);
@@ -59,9 +58,9 @@ test("fetches isobot.ts file when receiving webhook", async (t) => {
   const [result] = (await EventEmitter.once(t.context.emitter, "result")) as [
     PipelineResult
   ];
-  if (result.isOk()) {
-    t.snapshot(result.value);
+  if (result.isOk() && result.value.status === "OK") {
+    t.deepEqual(result.value.pipelineEvent.ctx, {});
   } else {
-    t.snapshot(result.error);
+    t.fail("expected OK result");
   }
 });

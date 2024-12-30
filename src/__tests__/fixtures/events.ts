@@ -1,7 +1,16 @@
 import { ExtractWithName, fromDeepPartial } from "../../../utils/typescript.js";
 import type { EmitterWebhookEvent as WebhookEvent } from "@octokit/webhooks";
+import { AnyPipelineEvent } from "../../pipeline.js";
 
 type IssueCommentEvent = ExtractWithName<WebhookEvent, "issue_comment">;
+
+export const asPipelineEvent = <E extends WebhookEvent>(
+  evt: E
+): AnyPipelineEvent => ({
+  ...evt,
+  ctx: {},
+  tk: {} as any,
+});
 
 export const issue_comment_created = fromDeepPartial<IssueCommentEvent>({
   id: "test-issue_comment-id",

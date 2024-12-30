@@ -1,11 +1,9 @@
 import anyTest, { TestFn } from "ava";
 import { runInIsolateInfallible } from "../isolate.js";
-import { isolateEntrypointFilename } from "../paths.js";
-import * as exampleOnCommentApproveMergeMeta from "../examples/on-comment-approve-merge.js";
-import * as exampleInvalidPipelineMissingExportMeta from "../examples/invalid-pipeline-missing-export.js";
-
 import * as eventsFixture from "./fixtures/events.js";
 import { getLogger } from "./fixtures/probot.js";
+import { Code } from "../code.js";
+import * as exampleOnCommentApproveMergeMeta from "../examples/on-comment-approve-merge.js";
 
 const test = anyTest as TestFn<{}>;
 
@@ -20,9 +18,10 @@ test.afterEach.always(() => {
 test("runs isolate yields pipeline event - updated context", async (t) => {
   const logger = getLogger();
   const out = await runInIsolateInfallible({
-    entrypointFilename: isolateEntrypointFilename,
-    isoFilename: exampleOnCommentApproveMergeMeta.__filename,
-    eventPayload: eventsFixture.issue_comment_created,
+    script: await Code.fromFilename(exampleOnCommentApproveMergeMeta.filename),
+    pipelineEvent: eventsFixture.asPipelineEvent(
+      eventsFixture.issue_comment_created
+    ),
     logger,
   });
   if (out.isOk()) {
@@ -35,9 +34,10 @@ test("runs isolate yields pipeline event - updated context", async (t) => {
 test("runs isolate yields pipeline event - error with pipeline", async (t) => {
   const logger = getLogger();
   const out = await runInIsolateInfallible({
-    entrypointFilename: isolateEntrypointFilename,
-    isoFilename: exampleInvalidPipelineMissingExportMeta.__filename,
-    eventPayload: eventsFixture.issue_comment_created,
+    script: Code.from(`module.exports.pipelinezzzz  = stream => stream`),
+    pipelineEvent: eventsFixture.asPipelineEvent(
+      eventsFixture.issue_comment_created
+    ),
     logger,
   });
   if (out.isOk()) {
@@ -45,7 +45,7 @@ test("runs isolate yields pipeline event - error with pipeline", async (t) => {
   } else {
     t.is(
       out.error,
-      "AssertionError [ERR_ASSERTION]: expected pipeline function export"
+      "pipeline run failed: AssertionError [ERR_ASSERTION]: expected pipeline function export"
     );
   }
 });

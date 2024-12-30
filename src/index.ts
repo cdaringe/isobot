@@ -1,14 +1,15 @@
 import { EmitterWebhookEvent } from "@octokit/webhooks";
 import { cpus } from "os";
 import { file } from "tmp-promise";
-import * as fs from "node:fs/promises";
 import { Probot, ProbotOctokit } from "probot";
 import PQueue from "p-queue";
 import { IsolateResult, runInIsolateInfallible } from "./isolate.js";
-import { Err, Ok, Result } from "ts-results-es";
+import { Err, Ok, Result, ResultErrType, ResultOkType } from "ts-results-es";
 import { EventEmitter } from "node:events";
-import { isolateEntrypointFilename } from "./paths.js";
-import { Pipeline } from "./pipeline.js";
+import { AnyPipelineEvent, Pipeline, tk } from "./pipeline.js";
+import esbuild from "esbuild";
+import { deepFreeze } from "../utils/collection.js";
+import { Code } from "./code.js";
 
 export type ResultEmitter = EventEmitter<{ result: [PipelineResult] }>;
 type ListenOptions = { emitter?: ResultEmitter };
@@ -21,32 +22,42 @@ export const createListener =
     const queue = new PQueue({ concurrency });
     app.onAny((event) =>
       queue.add(async () => {
-        const { path: isofilename, cleanup } = await file({ postfix: ".ts" });
-        try {
-          const result = await attemptPipeline(event as EmitterWebhookEvent, {
-            isofilename,
-            probot: app,
-          });
-          result.isOk()
-            ? app.log.info(result.value)
-            : app.log.error(result.error);
-          emitter?.emit("result", result);
-        } finally {
-          cleanup().catch(() => null);
-        }
+        const { path: isofilename, cleanup } = await file({ postfix: ".js" });
+        await attemptPipeline(event as EmitterWebhookEvent, {
+          isofilename,
+          probot: app,
+        })
+          .then((result) => {
+            result.isOk()
+              ? app.log.info({
+                  status: result.value.status,
+                  repoContext: result.value.repoContext,
+                })
+              : app.log.error({
+                  status: result.error.status,
+                  repoContext: result.error.repoContext,
+                });
+            emitter?.emit("result", result);
+          })
+          .finally(() => cleanup().catch(() => null));
       })
     );
   };
 
 type RepoContext = { repo: string; owner: string; ref: string };
 export type PipelineResult = Result<
-  | { status: "SKIPPED"; repoContext?: RepoContext; message?: string }
   | {
-      status: "HALTED";
+      status: "SKIPPED";
       repoContext?: RepoContext;
-      isolateResult: IsolateResult;
+      message?: string;
+      isolateResult?: undefined;
+    }
+  | {
+      status: "OK";
+      repoContext?: RepoContext;
+      pipelineEvent: ResultOkType<IsolateResult>;
     },
-  { repoContext?: RepoContext; message: string }
+  { status: "ERR"; repoContext?: RepoContext; message: string }
 >;
 
 const attemptPipeline = async (
@@ -75,7 +86,7 @@ const attemptPipeline = async (
 
   const repoContext = { owner, repo, ref };
 
-  const isofileReadyResult = await octokit.repos
+  const isoscriptResult = await octokit.repos
     .getContent({
       owner,
       repo,
@@ -91,14 +102,11 @@ const attemptPipeline = async (
           "encoding" in res.data &&
           res.data.encoding === "base64"
         ) {
-          const fileContent = Buffer.from(
-            res.data.content,
-            "base64"
-          ).toString();
-          await fs.writeFile(opts.isofilename, fileContent, "utf-8");
-          return new Ok(undefined);
+          const content = Buffer.from(res.data.content, "base64").toString();
+          return new Ok(Code.from(content));
         } else {
           return new Err({
+            status: "ERR" as const,
             repoContext,
             message: `failed to get isofile file/base64 from GitHub getContents: ${JSON.stringify(
               res
@@ -108,6 +116,7 @@ const attemptPipeline = async (
       },
       (err) =>
         new Err({
+          status: "ERR" as const,
           repoContext,
           message: `failed to get isofile file/base64 from GitHub getContents: ${String(
             err
@@ -115,18 +124,25 @@ const attemptPipeline = async (
         })
     );
 
-  if (isofileReadyResult.isErr()) {
-    return isofileReadyResult;
+  if (isoscriptResult.isErr()) {
+    return isoscriptResult;
   }
 
+  const pipelineEvent: AnyPipelineEvent = deepFreeze({
+    ...event,
+    ctx: {},
+    tk: tk,
+  });
+
   const isolateResult = await runInIsolateInfallible({
-    entrypointFilename: isolateEntrypointFilename,
-    eventPayload: context,
-    isoFilename: opts.isofilename,
+    pipelineEvent,
+    script: isoscriptResult.value,
     logger: opts.probot?.log,
   });
 
-  return new Ok({ status: "HALTED", repoContext, isolateResult });
+  return isolateResult.isOk()
+    ? new Ok({ status: "OK", repoContext, pipelineEvent: isolateResult.value })
+    : new Err({ status: "ERR", repoContext, message: isolateResult.error });
 };
 
 export const pipeline: Pipeline = (

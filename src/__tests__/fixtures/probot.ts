@@ -7,9 +7,11 @@ export const getProbot = (options?: unknown) => {
     appId: 123,
     privateKey: "test",
     githubToken: "test",
+    log: getLogger(),
     Octokit: ProbotOctokit.defaults((instanceOptions: any) => {
       return {
         ...instanceOptions,
+        log: getLogger(),
         retry: { enabled: false },
         throttle: { enabled: false },
       };
@@ -28,5 +30,8 @@ export const getLogger = (): Logger => {
     error: sinon.fake((...args: any[]) =>
       isDebug ? console.error(...args) : undefined
     ),
+    child: sinon.fake((...args: any[]) => {
+      return getLogger();
+    }) as any,
   } as Partial<Logger> as Logger;
 };
