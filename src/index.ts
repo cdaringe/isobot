@@ -1,7 +1,7 @@
 import { EmitterWebhookEvent } from "@octokit/webhooks";
 import { cpus } from "os";
 import { file } from "tmp-promise";
-import { Probot, ProbotOctokit } from "probot";
+import { Logger, Probot, ProbotOctokit } from "probot";
 import PQueue from "p-queue";
 import { IsolateResult, runInIsolateInfallible } from "./isolate.js";
 import { Err, Ok, Result, ResultErrType, ResultOkType } from "ts-results-es";
@@ -12,7 +12,7 @@ import { deepFreeze } from "../utils/collection.js";
 import { Code } from "./code.js";
 
 export type ResultEmitter = EventEmitter<{ result: [PipelineResult] }>;
-type ListenOptions = { emitter?: ResultEmitter };
+type ListenOptions = { emitter?: ResultEmitter; log?: Logger };
 
 export const createListener =
   (opts: ListenOptions = {}) =>
@@ -26,6 +26,7 @@ export const createListener =
         await attemptPipeline(event as EmitterWebhookEvent, {
           isofilename,
           probot: app,
+          log: opts.log,
         })
           .then((result) => {
             result.isOk()
@@ -65,6 +66,7 @@ const attemptPipeline = async (
   opts: {
     isofilename: string;
     probot?: Probot;
+    log?: Logger;
   }
 ): Promise<PipelineResult> => {
   const context = event.payload;
@@ -137,7 +139,7 @@ const attemptPipeline = async (
   const isolateResult = await runInIsolateInfallible({
     pipelineEvent,
     script: isoscriptResult.value,
-    logger: opts.probot?.log,
+    logger: opts.log,
   });
 
   return isolateResult.isOk()
