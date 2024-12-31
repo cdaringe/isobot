@@ -8,9 +8,6 @@ import { Endpoints } from "@octokit/types";
 import { ProbotOctokit } from "probot";
 import { RepoContext } from "./utils/github.js";
 
-type GHPullRequest =
-  Endpoints["GET /repos/{owner}/{repo}/pulls/{pull_number}"]["response"]["data"];
-
 type GHToolkitOptions = {
   octokit: ProbotOctokit;
   repoContext: RepoContext;

@@ -6,13 +6,16 @@ import PQueue from "p-queue";
 import { IsolateResult, runInIsolateInfallible } from "./isolate.js";
 import { Err, Ok, Result, ResultOkType } from "ts-results-es";
 import { EventEmitter } from "node:events";
-import { AnyPipelineEvent, createToolkit, Pipeline } from "./pipeline.js";
+import { AnyPipelineEvent, createToolkit } from "./pipeline.js";
 import { deepFreeze } from "./utils/collection.js";
 import { Code } from "./code.js";
 import { RepoContext } from "./utils/github.js";
 
+export { type Pipeline } from "./pipeline.js";
+
 export type ResultEmitter = EventEmitter<{ result: [PipelineResult] }>;
-type ListenOptions = { emitter?: ResultEmitter; log?: Logger };
+
+export type ListenOptions = { emitter?: ResultEmitter; log?: Logger };
 
 export const createListener = (opts?: ListenOptions) => (app: Probot) => {
   /* istanbul ignore next reason: static analysis sufficient @preserve */
