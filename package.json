@@ -35,7 +35,7 @@
     "@vitest/coverage-istanbul": "2.1.8",
     "msw": "^2.7.0",
     "probot": "^13.4.1",
-    "semantic-release": "24.2.0",
+    "semantic-release": "^20",
     "sinon": "19.0.2",
     "smee-client": "2.0.4",
     "typescript": "5.7.2",
