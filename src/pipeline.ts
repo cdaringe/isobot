@@ -108,7 +108,7 @@ type BasicPipelineEvent<
 
 type AnyBasicPipelineEvent = BasicPipelineEvent<any, any>;
 
-type PipelineEvent<
+export type PipelineEvent<
   TName extends EmitterWebhookEventName,
   Ctx = {}
 > = BasicPipelineEvent<TName, Ctx> & {

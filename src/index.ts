@@ -10,7 +10,7 @@ import { deepFreeze } from "./utils/collection.js";
 import { Code } from "./code.js";
 import { RepoContext } from "./utils/github.js";
 
-export { type Pipeline } from "./pipeline.js";
+export type { Pipeline, PipelineEvent, AnyPipelineEvent } from "./pipeline.js";
 
 export type ResultEmitter = EventEmitter<{ result: [PipelineResult] }>;
 
