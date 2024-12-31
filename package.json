@@ -32,6 +32,7 @@
     "@vitest/coverage-istanbul": "2.1.8",
     "msw": "^2.7.0",
     "probot": "^13.4.1",
+    "semantic-release": "24.2.0",
     "sinon": "19.0.2",
     "smee-client": "2.0.4",
     "typescript": "5.7.2",
@@ -39,12 +40,12 @@
     "wireit": "0.14.9"
   },
   "dependencies": {
-    "esbuild": "^0.24.2",
-    "probot": "^13.4.1",
     "@octokit/types": "^13.6.2",
     "@octokit/webhooks": "12.3.1",
+    "esbuild": "^0.24.2",
     "p-queue": "^8.0.1",
     "primitivify": "^3.0.2",
+    "probot": "^13.4.1",
     "rxjs": "^7.8.1",
     "tmp-promise": "^3.0.3",
     "ts-results-es": "^4.2.0",

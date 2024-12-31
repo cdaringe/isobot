@@ -42,8 +42,8 @@ jobs:
       - name: Run tests
         run: pnpm test
 
-      - name: Semantic Release
-        uses: cycjimmy/semantic-release-action@v4
+      - name: Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: pnpm exec semantic-release
