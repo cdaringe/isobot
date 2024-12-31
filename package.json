@@ -5,6 +5,9 @@
   "bin": "./dist/bin.js",
   "main": "dist/index.js",
   "type": "module",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "dotenvx run -- tsx ./src/bin.ts",
     "build": "wireit",
