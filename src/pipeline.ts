@@ -11,13 +11,14 @@ import { RepoContext } from "./utils/github.js";
 type GHPullRequest =
   Endpoints["GET /repos/{owner}/{repo}/pulls/{pull_number}"]["response"]["data"];
 
-export const createToolkit = ({
-  octokit,
-  repoContext,
-}: {
+type GHToolkitOptions = {
   octokit: ProbotOctokit;
   repoContext: RepoContext;
-}) => ({
+};
+export const createGHToolkit = ({
+  octokit,
+  repoContext,
+}: GHToolkitOptions) => ({
   gh: {
     withPR: async <E extends AnyBasicPipelineEvent>(
       evt: E,
@@ -54,6 +55,7 @@ export const createToolkit = ({
           const existingBotReview = it.data.find((it) =>
             it.user?.login.match(/isobot/)
           );
+          /* istanbul ignore next @preserve */
           if (existingBotReview) {
             return existingBotReview;
           }
@@ -81,14 +83,21 @@ export const createToolkit = ({
         .merge({ pull_number, ...repoContext })
         .then((__) => updateCtx(evt, { merged: true })),
   },
-  filter:
-    <UName extends EmitterWebhookEventName>(name: UName) =>
-    <E extends AnyBasicPipelineEvent>(evt: E): evt is E =>
-      evt.name === name,
-  collection: {
-    last: <T>(arr: T[]): T | undefined => arr[arr.length - 1],
-  },
 });
+
+type GHToolkit = ReturnType<typeof createGHToolkit>;
+
+/* istanbul ignore next reason: istanbul is incorrectly reporting this. it is covered, sans maybe 2-3 lines :/ @preserve */
+export const createToolkit = ({
+  octokit,
+  repoContext,
+}: GHToolkitOptions): GHToolkitOptions & GHToolkit => {
+  return {
+    octokit,
+    repoContext,
+    ...createGHToolkit({ octokit, repoContext }),
+  };
+};
 
 type Toolkit = ReturnType<typeof createToolkit>;
 

@@ -14,39 +14,49 @@ import { RepoContext } from "./utils/github.js";
 export type ResultEmitter = EventEmitter<{ result: [PipelineResult] }>;
 type ListenOptions = { emitter?: ResultEmitter; log?: Logger };
 
-export const createListener =
-  (opts: ListenOptions = {}) =>
-  (app: Probot) => {
-    const { emitter } = opts;
-    const concurrency = Math.max(1, cpus().length - 1);
-    const queue = new PQueue({ concurrency });
-    app.onAny((event) =>
-      queue.add(async () => {
-        const { path: isofilename, cleanup } = await file({ postfix: ".js" });
-        await attemptPipeline(event as EmitterWebhookEvent, {
-          isofilename,
-          probot: app,
-          log: opts.log,
-        })
-          .then((result) => {
-            result.isOk()
-              ? app.log.info({
-                  status: result.value.status,
-                  repoContext: result.value.repoContext,
-                  eventName: event.name,
-                })
-              : app.log.error({
-                  eventName: event.name,
-                  status: result.error.status,
-                  repoContext: result.error.repoContext,
-                  message: result.error.message,
-                });
-            emitter?.emit("result", result);
-          })
-          .finally(() => cleanup().catch(() => null));
+export const createListener = (opts?: ListenOptions) => (app: Probot) => {
+  /* istanbul ignore next reason: static analysis sufficient @preserve */
+  const { emitter, log } = opts ?? {};
+  const concurrency = Math.max(1, cpus().length - 1);
+  const queue = new PQueue({ concurrency });
+  app.onAny((event) =>
+    queue.add(async () => {
+      const { path: isofilename, cleanup } = await file({ postfix: ".js" });
+      await attemptPipeline(event as EmitterWebhookEvent, {
+        isofilename,
+        probot: app,
+        log,
       })
-    );
-  };
+        .then((result) => {
+          result.isOk()
+            ? app.log.info({
+                status: result.value.status,
+                repoContext: result.value.repoContext,
+                eventName: event.name,
+              })
+            : app.log.error({
+                eventName: event.name,
+                status: result.error.status,
+                repoContext: result.error.repoContext,
+                message: result.error.message,
+              });
+          emitter?.emit("result", result);
+        })
+        .finally(() =>
+          cleanup().catch(
+            /* istanbul ignore next reason: static analysis sufficient @preserve */ () =>
+              null
+          )
+        );
+    })
+  );
+};
+
+export type PipelineErr = {
+  status: "ERR";
+  repoContext?: RepoContext;
+  message: string;
+};
 
 export type PipelineResult = Result<
   | {
@@ -60,7 +70,7 @@ export type PipelineResult = Result<
       repoContext?: RepoContext;
       pipelineEvent: ResultOkType<IsolateResult>;
     },
-  { status: "ERR"; repoContext?: RepoContext; message: string }
+  PipelineErr
 >;
 
 const attemptPipeline = async (
@@ -72,13 +82,15 @@ const attemptPipeline = async (
   }
 ): Promise<PipelineResult> => {
   const context = event.payload;
+  /* istanbul ignore next @preserve */
   if (!("repository" in context)) {
     return new Ok({ status: "SKIPPED", message: "missing repository" });
   }
+  /* istanbul ignore next @preserve */
   if (!context.repository?.owner) {
     return new Ok({ status: "SKIPPED", message: "missing owner" });
   }
-
+  /* istanbul ignore next @preserve */
   if (!("octokit" in event)) {
     return new Ok({ status: "SKIPPED", message: "missing octokit" });
   }
@@ -144,23 +156,8 @@ const attemptPipeline = async (
     logger: opts.log,
   });
 
+  /* istanbul ignore next reason: static analysis sufficient @preserve */
   return isolateResult.isOk()
     ? new Ok({ status: "OK", repoContext, pipelineEvent: isolateResult.value })
     : new Err({ status: "ERR", repoContext, message: isolateResult.error });
 };
-
-export const pipeline: Pipeline = (
-  stream,
-  {
-    rxjs: {
-      operators: { filter, mergeMap },
-    },
-  }
-) =>
-  stream.pipe(
-    filter((evt) => evt.name === "issue_comment"),
-    mergeMap((evt) => evt.tk.gh.withPR(evt, evt.payload.issue.id)),
-    mergeMap((evt) => evt.tk.gh.withPRComments(evt, evt.ctx.pr.id)),
-    mergeMap((evt) => evt.tk.gh.approvePR(evt, evt.ctx.pr.id)),
-    mergeMap((evt) => evt.tk.gh.mergePR(evt, evt.ctx.pr.id))
-  );

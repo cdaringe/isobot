@@ -1,6 +1,6 @@
 import type { Pipeline } from "../pipeline.js";
 
-export const __filename = new URL(import.meta.url).pathname;
+export const filename = __filename;
 
 const _pipeline: Pipeline = (
   stream,

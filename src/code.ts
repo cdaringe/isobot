@@ -11,10 +11,6 @@ export class Code {
 
   constructor(public value: string) {}
 
-  toString(): string {
-    return this.value;
-  }
-
   async transpileNodeCJS() {
     const result = await esbuild.transform(this.value, {
       platform: "node",

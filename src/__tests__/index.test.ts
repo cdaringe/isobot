@@ -1,66 +1,96 @@
-import anyTest, { TestFn } from "ava";
-import nock from "nock";
-import { createListener, PipelineResult, ResultEmitter } from "../index.js";
+import { describe, it, vi, expect } from "vitest";
+import {
+  createListener,
+  PipelineErr,
+  PipelineResult,
+  ResultEmitter,
+} from "../index.js";
 import { getProbot } from "./fixtures/probot.js";
 import * as eventsFixture from "./fixtures/events.js";
-import { Probot } from "probot";
 import EventEmitter from "node:events";
-import { setupServer, SetupServerApi } from "msw/node";
-import { http, HttpResponse } from "msw";
+import { withMockServer } from "./fixtures/mock-server.js";
+import { Err, ErrImpl } from "ts-results-es";
 
-const test = anyTest as TestFn<{
-  emitter: ResultEmitter;
-  probot: Probot;
-  server: SetupServerApi;
-}>;
-
-test.before((t) => {
-  nock.recorder.rec();
-  nock.disableNetConnect();
-
-  const emitter: ResultEmitter = new EventEmitter();
-  t.context.emitter = emitter;
-
+describe("integration", () => {
   const probot = getProbot();
+  const emitter: ResultEmitter = new EventEmitter();
   probot.load(createListener({ emitter }));
-  t.context.probot = probot;
-});
 
-test.beforeEach((t) => {
-  t.context.server = setupServer();
-  t.context.server.resetHandlers();
-});
+  it(
+    "should fetch isobot.ts file when receiving webhook",
+    withMockServer(async (server, { msw }) => {
+      server.use(
+        msw.http.all("*", (info) => {
+          return msw.HttpResponse.json({
+            type: "file",
+            content: Buffer.from(
+              "export const pipeline = stream => stream"
+            ).toString("base64"),
+            encoding: "base64",
+          });
+        })
+      );
+      server.listen();
 
-test.afterEach.always(async (t) => {
-  await t.context.server.close();
-  nock.cleanAll();
-});
+      probot.receive(eventsFixture.issue_comment_created);
 
-test.after((t) => {});
+      const [result] = (await EventEmitter.once(emitter, "result")) as [
+        PipelineResult
+      ];
 
-test("fetches isobot.ts file when receiving webhook", async (t) => {
-  t.context.server.use(
-    http.all("*", (info) => {
-      info.request.url;
-      return HttpResponse.json({
-        type: "file",
-        content: Buffer.from(
-          "export const pipeline = stream => stream"
-        ).toString("base64"),
-        encoding: "base64",
-      });
+      if (result.isOk() && result.value.status === "OK") {
+        expect(result.value.pipelineEvent.ctx).toEqual({});
+      } else {
+        expect.fail("expected OK result");
+      }
     })
   );
-  await t.context.server.listen();
 
-  t.context.probot.receive(eventsFixture.issue_comment_created);
+  it(
+    "should fail gracefully on not found isobot.ts",
+    withMockServer(async (server, { msw }) => {
+      server.use(
+        msw.http.all("*", (info) => {
+          return msw.HttpResponse.json("not found", { status: 404 });
+        })
+      );
+      server.listen();
 
-  const [result] = (await EventEmitter.once(t.context.emitter, "result")) as [
-    PipelineResult
-  ];
-  if (result.isOk() && result.value.status === "OK") {
-    t.deepEqual(result.value.pipelineEvent.ctx, {});
-  } else {
-    t.fail("expected OK result");
-  }
+      probot.receive(eventsFixture.issue_comment_created);
+
+      const [result] = (await EventEmitter.once(emitter, "result")) as [
+        PipelineResult
+      ];
+
+      expect((result as ErrImpl<PipelineErr>).error.message).toBe(
+        "failed to get isofile file/base64 from GitHub getContents: HttpError: not found"
+      );
+    })
+  );
+
+  it(
+    "should fail gracefully on invalid isobot.ts",
+    withMockServer(async (server, { msw }) => {
+      server.use(
+        msw.http.all("*", (info) => {
+          return msw.HttpResponse.json({
+            type: "file",
+            content: "",
+            encoding: "iso-8859-1",
+          });
+        })
+      );
+      server.listen();
+
+      probot.receive(eventsFixture.issue_comment_created);
+
+      const [result] = (await EventEmitter.once(emitter, "result")) as [
+        PipelineResult
+      ];
+
+      expect((result as ErrImpl<PipelineErr>).error.message).toMatch(
+        /iso-8859/
+      );
+    })
+  );
 });

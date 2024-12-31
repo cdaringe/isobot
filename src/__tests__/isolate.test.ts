@@ -1,48 +1,111 @@
-import anyTest, { TestFn } from "ava";
+import { describe, it, expect } from "vitest";
 import { runInIsolateInfallible } from "../isolate.js";
 import * as eventsFixture from "./fixtures/events.js";
 import { getLogger } from "./fixtures/probot.js";
 import { Code } from "../code.js";
 import * as exampleOnCommentApproveMergeMeta from "../examples/on-comment-approve-merge.js";
+import * as exampleInvalidPipelineEvent from "../examples/invalid-non-pipeline-event.js";
+import * as exampleInvalidPipelineObservable from "../examples/invalid-non-observable-pipeline.js";
 
-const test = anyTest as TestFn<{}>;
+import { withMockServer } from "./fixtures/mock-server.js";
+import * as github from "./fixtures/github/index.js";
+import * as mswMod from "msw";
 
-test.before(() => {});
-
-test.beforeEach((t) => {});
-
-test.afterEach.always(() => {
-  // nock.cleanAll();
-});
-
-test("runs isolate yields pipeline event - updated context", async (t) => {
-  const logger = getLogger();
-  const out = await runInIsolateInfallible({
-    script: await Code.fromFilename(exampleOnCommentApproveMergeMeta.filename),
-    pipelineEvent: eventsFixture.asPipelineEvent(
-      eventsFixture.issue_comment_created
-    ),
-    logger,
+const createOnCommentApproveMergeMetaHandlers = (msw: typeof mswMod) =>
+  msw.http.all("*", (info) => {
+    const pathname = new URL(info.request.url).pathname;
+    switch (`${info.request.method} ${pathname}`) {
+      case "GET /repos/owner/repo/pulls/1":
+        return msw.HttpResponse.json(github.pulls.get);
+      case "GET /repos/owner/repo/issues/1/comments":
+        const nextComments = globalThis.structuredClone(
+          github.issues.listComments
+        );
+        nextComments[0]!.body = "/merge";
+        return msw.HttpResponse.json(nextComments);
+      case `GET /repos/owner/repo/pulls/${github.pulls.get.number}/reviews`:
+        return msw.HttpResponse.json(github.reviews.list);
+      case `POST /repos/owner/repo/pulls/${github.pulls.get.number}/reviews`:
+        return msw.HttpResponse.json(github.reviews.create);
+      case `PUT /repos/owner/repo/pulls/${github.pulls.get.number}/merge`:
+        return msw.HttpResponse.json(github.pulls.merge);
+      default:
+        return msw.HttpResponse.json("not found", { status: 404 });
+    }
   });
-  if (out.isOk()) {
-    t.like(out.value.ctx, { approved: true, merged: true });
-  } else {
-    t.fail(out.error);
-  }
-});
+describe("isolate", () => {
+  it(
+    "should yield pipeline events - updated context",
+    withMockServer(async (server, { msw }) => {
+      server.use(createOnCommentApproveMergeMetaHandlers(msw));
+      server.listen();
+      const logger = getLogger();
+      const out = await runInIsolateInfallible({
+        script: await Code.fromFilename(
+          exampleOnCommentApproveMergeMeta.filename
+        ),
+        pipelineEvent: eventsFixture.asPipelineEvent(
+          eventsFixture.issue_comment_created
+        ),
+        logger,
+      });
+      if (out.isOk()) {
+        expect(out.value.ctx).toEqual(
+          expect.objectContaining({ approved: true, merged: true })
+        );
+      } else {
+        expect.fail(out.error);
+      }
+    })
+  );
 
-test("runs isolate yields pipeline event - error with pipeline", async (t) => {
-  const logger = getLogger();
-  const out = await runInIsolateInfallible({
-    script: Code.from(`module.exports.pipelinezzzz  = stream => stream`),
-    pipelineEvent: eventsFixture.asPipelineEvent(
-      eventsFixture.issue_comment_created
-    ),
-    logger,
+  it("should yield pipeline events - no pipeline found", async (t) => {
+    const logger = getLogger();
+    const out = await runInIsolateInfallible({
+      script: Code.from(`module.exports.pipelinezzzz  = stream => stream`),
+      pipelineEvent: eventsFixture.asPipelineEvent(
+        eventsFixture.issue_comment_created
+      ),
+      logger,
+    });
+    if (out.isOk()) {
+      expect.fail("invalid pipeline should not have succeeded");
+    } else {
+      expect(out.error).toMatch(/expected pipeline function export/);
+    }
   });
-  if (out.isOk()) {
-    t.fail("invalid pipeline should not have succeeded");
-  } else {
-    t.regex(out.error, /expected pipeline function export/);
-  }
+
+  it("should yield pipeline events - invalid pipeline event", async (t) => {
+    const logger = getLogger();
+    const out = await runInIsolateInfallible({
+      script: await Code.fromFilename(exampleInvalidPipelineEvent.filename),
+      pipelineEvent: eventsFixture.asPipelineEvent(
+        eventsFixture.issue_comment_created
+      ),
+      logger,
+    });
+    if (out.isOk()) {
+      expect.fail("invalid pipeline should not have succeeded");
+    } else {
+      expect(out.error).toMatch(/did not emit a AnyPipelineEvent kind/);
+    }
+  });
+
+  it("should yield pipeline events - pipeline does not provide observable", async (t) => {
+    const logger = getLogger();
+    const out = await runInIsolateInfallible({
+      script: await Code.fromFilename(
+        exampleInvalidPipelineObservable.filename
+      ),
+      pipelineEvent: eventsFixture.asPipelineEvent(
+        eventsFixture.issue_comment_created
+      ),
+      logger,
+    });
+    if (out.isOk()) {
+      expect.fail("invalid pipeline should not have succeeded");
+    } else {
+      expect(out.error).toMatch(/expected Observable/);
+    }
+  });
 });

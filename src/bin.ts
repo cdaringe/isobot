@@ -1,3 +1,4 @@
+/* istanbul ignore file reason: imperative shell @preserve */
 import { run } from "probot";
 import { get } from "./logger.js";
 import { createListener } from "./index.js";

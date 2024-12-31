@@ -1,13 +1,14 @@
 {
   "name": "isobot",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.0.1",
+  "description": "A probot application for executing user defined scripts.",
+  "bin": "./dist/bin.js",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
     "dev": "dotenvx run -- tsx ./src/bin.ts",
     "build": "wireit",
-    "test": "ava"
+    "test": "vitest run"
   },
   "wireit": {
     "build": {
@@ -21,15 +22,10 @@
   ],
   "author": "cdaringe",
   "license": "ISC",
-  "peerDependencies": {
-    "probot": "^13.4.1"
-  },
   "devDependencies": {
     "@dotenvx/dotenvx": "1.32.0",
-    "@types/sinon": "17.0.3",
-    "ava": "6.2.0",
+    "@vitest/coverage-istanbul": "2.1.8",
     "msw": "^2.7.0",
-    "nock": "^13.5.6",
     "probot": "^13.4.1",
     "sinon": "19.0.2",
     "smee-client": "2.0.4",
@@ -38,9 +34,10 @@
     "wireit": "0.14.9"
   },
   "dependencies": {
+    "esbuild": "^0.24.2",
+    "probot": "^13.4.1",
     "@octokit/types": "^13.6.2",
     "@octokit/webhooks": "12.3.1",
-    "esbuild": "^0.24.2",
     "p-queue": "^8.0.1",
     "primitivify": "^3.0.1",
     "rxjs": "^7.8.1",
@@ -54,18 +51,5 @@
     "overrides": {
       "@octokit/webhooks": "12.3.1"
     }
-  },
-  "ava": {
-    "files": [
-      "src/**/*.test.ts"
-    ],
-    "extensions": [
-      "ts"
-    ],
-    "nodeArguments": [
-      "-C",
-      "import",
-      "--import=tsx"
-    ]
   }
 }

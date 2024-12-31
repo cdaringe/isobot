@@ -48,6 +48,7 @@ export const runInIsolateInfallible = async ({
     ],
   });
 
+  /* istanbul ignore next @preserve */
   const scriptCode =
     typeof scriptOrCode === "string"
       ? scriptOrCode
@@ -87,6 +88,7 @@ return observable
       (err) =>
         new Err(
           `pipeline run failed: ${
+            /* istanbul ignore next @preserve */
             err instanceof Error ? err.stack || String(err) : String(err)
           }`
         )
@@ -100,11 +102,7 @@ const createCommonJSSandboxContext = () => {
     console: {
       ...console,
     },
-    require: (moduleName: string) => {
-      // Allow requiring only specific modules or built-ins
-      // if (moduleName === "fs" || moduleName === "path") {
-      //   return require(moduleName);
-      // }
+    require: /* istanbul ignore next @preserve */ (moduleName: string) => {
       throw new Error(`Module '${moduleName}' is not allowed in the sandbox.`);
     },
     __filename: "/sandbox/module.js",

@@ -1,3 +1,4 @@
 import { Logger } from "probot";
 
-export const get = (logger: Logger) => logger.child({ name: "isobot" });
+/* istanbul ignore next reason: static analysis sufficient @preserve */
+export const get = (logger: Logger): Logger => logger.child({ name: "isobot" });

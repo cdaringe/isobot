@@ -1,6 +1,6 @@
 import { Logger, Probot, ProbotOctokit } from "probot";
-import sinon from "sinon";
 import { isDebug } from "../../constants.js";
+import { vi } from "vitest";
 
 export const getProbot = (options?: unknown) => {
   return new Probot({
@@ -21,16 +21,16 @@ export const getProbot = (options?: unknown) => {
 
 export const getLogger = (): Logger => {
   return {
-    info: sinon.fake((...args: any[]) =>
+    info: vi.fn((...args: any[]) =>
       isDebug ? console.info(...args) : undefined
     ),
-    debug: sinon.fake((...args: any[]) =>
+    debug: vi.fn((...args: any[]) =>
       isDebug ? console.debug(...args) : undefined
     ),
-    error: sinon.fake((...args: any[]) =>
+    error: vi.fn((...args: any[]) =>
       isDebug ? console.error(...args) : undefined
     ),
-    child: sinon.fake((...args: any[]) => {
+    child: vi.fn((...args: any[]) => {
       return getLogger();
     }) as any,
   } as Partial<Logger> as Logger;
