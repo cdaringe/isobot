@@ -1,5 +1,5 @@
 import * as operators from "rxjs/operators";
-import { Observable, of } from "rxjs";
+import { Observable } from "rxjs";
 import {
   EmitterWebhookEvent,
   EmitterWebhookEventName,
