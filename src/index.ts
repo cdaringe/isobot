@@ -1,6 +1,5 @@
 import { EmitterWebhookEvent } from "@octokit/webhooks";
 import { cpus } from "os";
-import { file } from "tmp-promise";
 import { Logger, Probot, ProbotOctokit } from "probot";
 import PQueue from "p-queue";
 import { IsolateResult, runInIsolateInfallible } from "./isolate.js";
@@ -24,33 +23,24 @@ export const createListener = (opts?: ListenOptions) => (app: Probot) => {
   const queue = new PQueue({ concurrency });
   app.onAny((event) =>
     queue.add(async () => {
-      const { path: isofilename, cleanup } = await file({ postfix: ".js" });
       await attemptPipeline(event as EmitterWebhookEvent, {
-        isofilename,
         probot: app,
         log,
-      })
-        .then((result) => {
-          result.isOk()
-            ? app.log.info({
-                status: result.value.status,
-                repoContext: result.value.repoContext,
-                eventName: event.name,
-              })
-            : app.log.error({
-                eventName: event.name,
-                status: result.error.status,
-                repoContext: result.error.repoContext,
-                message: result.error.message,
-              });
-          emitter?.emit("result", result);
-        })
-        .finally(() =>
-          cleanup().catch(
-            /* istanbul ignore next reason: static analysis sufficient @preserve */ () =>
-              null
-          )
-        );
+      }).then((result) => {
+        result.isOk()
+          ? app.log.info({
+              status: result.value.status,
+              repoContext: result.value.repoContext,
+              eventName: event.name,
+            })
+          : app.log.error({
+              eventName: event.name,
+              status: result.error.status,
+              repoContext: result.error.repoContext,
+              message: result.error.message,
+            });
+        emitter?.emit("result", result);
+      });
     })
   );
 };
@@ -79,7 +69,6 @@ export type PipelineResult = Result<
 const attemptPipeline = async (
   event: EmitterWebhookEvent,
   opts: {
-    isofilename: string;
     probot?: Probot;
     log?: Logger;
   }
