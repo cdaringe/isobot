@@ -11,5 +11,6 @@
     "noUncheckedIndexedAccess": true,
     "skipLibCheck": true,
     "importHelpers": true,
-  }
+  },
+  "include": ["src"],
 }

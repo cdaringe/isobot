@@ -6,7 +6,8 @@
   "main": "dist/index.js",
   "type": "module",
   "files": [
-    "dist"
+    "dist",
+    "!dist/**/__tests__"
   ],
   "scripts": {
     "dev": "dotenvx run -- tsx ./src/bin.ts",
