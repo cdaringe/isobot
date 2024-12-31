@@ -15,6 +15,8 @@ type GHToolkitOptions = {
   octokit: ProbotOctokit;
   repoContext: RepoContext;
 };
+
+/* istanbul ignore next reason: istanbul is incorrectly reporting @preserve */
 export const createGHToolkit = ({
   octokit,
   repoContext,
@@ -87,7 +89,6 @@ export const createGHToolkit = ({
 
 type GHToolkit = ReturnType<typeof createGHToolkit>;
 
-/* istanbul ignore next reason: istanbul is incorrectly reporting this. it is covered, sans maybe 2-3 lines :/ @preserve */
 export const createToolkit = ({
   octokit,
   repoContext,
