@@ -38,7 +38,7 @@
     "semantic-release": "^20",
     "sinon": "19.0.2",
     "smee-client": "2.0.4",
-    "typescript": "5.7.2",
+    "typescript": "5.7.3",
     "vitest": "2.1.8",
     "wireit": "0.14.9"
   },
