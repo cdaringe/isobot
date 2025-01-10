@@ -50,13 +50,13 @@ importers:
         version: 1.32.0
       '@vitest/coverage-istanbul':
         specifier: 2.1.8
-        version: 2.1.8(vitest@2.1.8(@types/node@22.10.2)(msw@2.7.0(@types/node@22.10.2)(typescript@5.7.2)))
+        version: 2.1.8(vitest@2.1.8(@types/node@22.10.2)(msw@2.7.0(@types/node@22.10.2)(typescript@5.7.3)))
       msw:
         specifier: ^2.7.0
-        version: 2.7.0(@types/node@22.10.2)(typescript@5.7.2)
+        version: 2.7.0(@types/node@22.10.2)(typescript@5.7.3)
       semantic-release:
         specifier: ^20
-        version: 20.1.3(typescript@5.7.2)
+        version: 20.1.3(typescript@5.7.3)
       sinon:
         specifier: 19.0.2
         version: 19.0.2
@@ -64,11 +64,11 @@ importers:
         specifier: 2.0.4
         version: 2.0.4
       typescript:
-        specifier: 5.7.2
-        version: 5.7.2
+        specifier: 5.7.3
+        version: 5.7.3
       vitest:
         specifier: 2.1.8
-        version: 2.1.8(@types/node@22.10.2)(msw@2.7.0(@types/node@22.10.2)(typescript@5.7.2))
+        version: 2.1.8(@types/node@22.10.2)(msw@2.7.0(@types/node@22.10.2)(typescript@5.7.3))
       wireit:
         specifier: 0.14.9
         version: 0.14.9
@@ -3188,8 +3188,8 @@ packages:
     resolution: {integrity: sha512-TkRKr9sUTxEH8MdfuCSP7VizJyzRNMjj2J2do2Jr3Kym598JVdEksuzPQCnlFPW4ky9Q+iA+ma9BGm06XQBy8g==}
     engines: {node: '>= 0.6'}
 
-  typescript@5.7.2:
-    resolution: {integrity: sha512-i5t66RHxDvVN40HfDd1PsEThGNnlMCMT3jMUuoh9/0TaqWevNontacunWyN02LA9/fIbEWlcHZcgTKb9QoaLfg==}
+  typescript@5.7.3:
+    resolution: {integrity: sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -4150,7 +4150,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.29.1':
     optional: true
 
-  '@semantic-release/commit-analyzer@9.0.2(semantic-release@20.1.3(typescript@5.7.2))':
+  '@semantic-release/commit-analyzer@9.0.2(semantic-release@20.1.3(typescript@5.7.3))':
     dependencies:
       conventional-changelog-angular: 5.0.13
       conventional-commits-filter: 2.0.7
@@ -4159,13 +4159,13 @@ snapshots:
       import-from: 4.0.0
       lodash: 4.17.21
       micromatch: 4.0.8
-      semantic-release: 20.1.3(typescript@5.7.2)
+      semantic-release: 20.1.3(typescript@5.7.3)
     transitivePeerDependencies:
       - supports-color
 
   '@semantic-release/error@3.0.0': {}
 
-  '@semantic-release/github@8.1.0(semantic-release@20.1.3(typescript@5.7.2))':
+  '@semantic-release/github@8.1.0(semantic-release@20.1.3(typescript@5.7.3))':
     dependencies:
       '@octokit/core': 4.2.4
       '@octokit/plugin-paginate-rest': 6.1.2(@octokit/core@4.2.4)
@@ -4183,13 +4183,13 @@ snapshots:
       lodash: 4.17.21
       mime: 3.0.0
       p-filter: 2.1.0
-      semantic-release: 20.1.3(typescript@5.7.2)
+      semantic-release: 20.1.3(typescript@5.7.3)
       url-join: 4.0.1
     transitivePeerDependencies:
       - encoding
       - supports-color
 
-  '@semantic-release/npm@9.0.2(semantic-release@20.1.3(typescript@5.7.2))':
+  '@semantic-release/npm@9.0.2(semantic-release@20.1.3(typescript@5.7.3))':
     dependencies:
       '@semantic-release/error': 3.0.0
       aggregate-error: 3.1.0
@@ -4202,11 +4202,11 @@ snapshots:
       rc: 1.2.8
       read-pkg: 5.2.0
       registry-auth-token: 5.0.3
-      semantic-release: 20.1.3(typescript@5.7.2)
+      semantic-release: 20.1.3(typescript@5.7.3)
       semver: 7.6.3
       tempy: 1.0.1
 
-  '@semantic-release/release-notes-generator@10.0.3(semantic-release@20.1.3(typescript@5.7.2))':
+  '@semantic-release/release-notes-generator@10.0.3(semantic-release@20.1.3(typescript@5.7.3))':
     dependencies:
       conventional-changelog-angular: 5.0.13
       conventional-changelog-writer: 5.0.1
@@ -4218,7 +4218,7 @@ snapshots:
       into-stream: 6.0.0
       lodash: 4.17.21
       read-pkg-up: 7.0.1
-      semantic-release: 20.1.3(typescript@5.7.2)
+      semantic-release: 20.1.3(typescript@5.7.3)
     transitivePeerDependencies:
       - supports-color
 
@@ -4336,7 +4336,7 @@ snapshots:
 
   '@types/tough-cookie@4.0.5': {}
 
-  '@vitest/coverage-istanbul@2.1.8(vitest@2.1.8(@types/node@22.10.2)(msw@2.7.0(@types/node@22.10.2)(typescript@5.7.2)))':
+  '@vitest/coverage-istanbul@2.1.8(vitest@2.1.8(@types/node@22.10.2)(msw@2.7.0(@types/node@22.10.2)(typescript@5.7.3)))':
     dependencies:
       '@istanbuljs/schema': 0.1.3
       debug: 4.4.0
@@ -4348,7 +4348,7 @@ snapshots:
       magicast: 0.3.5
       test-exclude: 7.0.1
       tinyrainbow: 1.2.0
-      vitest: 2.1.8(@types/node@22.10.2)(msw@2.7.0(@types/node@22.10.2)(typescript@5.7.2))
+      vitest: 2.1.8(@types/node@22.10.2)(msw@2.7.0(@types/node@22.10.2)(typescript@5.7.3))
     transitivePeerDependencies:
       - supports-color
 
@@ -4359,13 +4359,13 @@ snapshots:
       chai: 5.1.2
       tinyrainbow: 1.2.0
 
-  '@vitest/mocker@2.1.8(msw@2.7.0(@types/node@22.10.2)(typescript@5.7.2))(vite@5.4.11(@types/node@22.10.2))':
+  '@vitest/mocker@2.1.8(msw@2.7.0(@types/node@22.10.2)(typescript@5.7.3))(vite@5.4.11(@types/node@22.10.2))':
     dependencies:
       '@vitest/spy': 2.1.8
       estree-walker: 3.0.3
       magic-string: 0.30.17
     optionalDependencies:
-      msw: 2.7.0(@types/node@22.10.2)(typescript@5.7.2)
+      msw: 2.7.0(@types/node@22.10.2)(typescript@5.7.3)
       vite: 5.4.11(@types/node@22.10.2)
 
   '@vitest/pretty-format@2.1.8':
@@ -4684,14 +4684,14 @@ snapshots:
 
   core-util-is@1.0.3: {}
 
-  cosmiconfig@8.3.6(typescript@5.7.2):
+  cosmiconfig@8.3.6(typescript@5.7.3):
     dependencies:
       import-fresh: 3.3.0
       js-yaml: 4.1.0
       parse-json: 5.2.0
       path-type: 4.0.0
     optionalDependencies:
-      typescript: 5.7.2
+      typescript: 5.7.3
 
   cross-spawn@7.0.6:
     dependencies:
@@ -5618,7 +5618,7 @@ snapshots:
 
   ms@2.1.3: {}
 
-  msw@2.7.0(@types/node@22.10.2)(typescript@5.7.2):
+  msw@2.7.0(@types/node@22.10.2)(typescript@5.7.3):
     dependencies:
       '@bundled-es-modules/cookie': 2.0.1
       '@bundled-es-modules/statuses': 1.0.1
@@ -5639,7 +5639,7 @@ snapshots:
       type-fest: 4.31.0
       yargs: 17.7.2
     optionalDependencies:
-      typescript: 5.7.2
+      typescript: 5.7.3
     transitivePeerDependencies:
       - '@types/node'
 
@@ -6133,15 +6133,15 @@ snapshots:
 
   safer-buffer@2.1.2: {}
 
-  semantic-release@20.1.3(typescript@5.7.2):
+  semantic-release@20.1.3(typescript@5.7.3):
     dependencies:
-      '@semantic-release/commit-analyzer': 9.0.2(semantic-release@20.1.3(typescript@5.7.2))
+      '@semantic-release/commit-analyzer': 9.0.2(semantic-release@20.1.3(typescript@5.7.3))
       '@semantic-release/error': 3.0.0
-      '@semantic-release/github': 8.1.0(semantic-release@20.1.3(typescript@5.7.2))
-      '@semantic-release/npm': 9.0.2(semantic-release@20.1.3(typescript@5.7.2))
-      '@semantic-release/release-notes-generator': 10.0.3(semantic-release@20.1.3(typescript@5.7.2))
+      '@semantic-release/github': 8.1.0(semantic-release@20.1.3(typescript@5.7.3))
+      '@semantic-release/npm': 9.0.2(semantic-release@20.1.3(typescript@5.7.3))
+      '@semantic-release/release-notes-generator': 10.0.3(semantic-release@20.1.3(typescript@5.7.3))
       aggregate-error: 4.0.1
-      cosmiconfig: 8.3.6(typescript@5.7.2)
+      cosmiconfig: 8.3.6(typescript@5.7.3)
       debug: 4.4.0
       env-ci: 8.0.0
       execa: 7.2.0
@@ -6480,7 +6480,7 @@ snapshots:
       media-typer: 0.3.0
       mime-types: 2.1.35
 
-  typescript@5.7.2: {}
+  typescript@5.7.3: {}
 
   uglify-js@3.19.3:
     optional: true
@@ -6563,10 +6563,10 @@ snapshots:
       '@types/node': 22.10.2
       fsevents: 2.3.3
 
-  vitest@2.1.8(@types/node@22.10.2)(msw@2.7.0(@types/node@22.10.2)(typescript@5.7.2)):
+  vitest@2.1.8(@types/node@22.10.2)(msw@2.7.0(@types/node@22.10.2)(typescript@5.7.3)):
     dependencies:
       '@vitest/expect': 2.1.8
-      '@vitest/mocker': 2.1.8(msw@2.7.0(@types/node@22.10.2)(typescript@5.7.2))(vite@5.4.11(@types/node@22.10.2))
+      '@vitest/mocker': 2.1.8(msw@2.7.0(@types/node@22.10.2)(typescript@5.7.3))(vite@5.4.11(@types/node@22.10.2))
       '@vitest/pretty-format': 2.1.8
       '@vitest/runner': 2.1.8
       '@vitest/snapshot': 2.1.8
