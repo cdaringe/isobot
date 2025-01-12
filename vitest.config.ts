@@ -6,6 +6,7 @@ export default defineConfig({
   test: {
     include: ["src/**/*.test.ts"],
     exclude,
+    reporters: ["tap-flat"],
     coverage: {
       enabled: !url(),
       thresholds: { 100: true },

@@ -1,0 +1,6 @@
+{
+  "debug.javascript.terminalOptions": {
+    "skipFiles": [
+    ]
+  }
+}

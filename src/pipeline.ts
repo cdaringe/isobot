@@ -4,9 +4,20 @@ import {
   EmitterWebhookEvent,
   EmitterWebhookEventName,
 } from "@octokit/webhooks";
-import { Endpoints } from "@octokit/types";
 import { ProbotOctokit } from "probot";
 import { RepoContext } from "./utils/github.js";
+
+const updateCtx = <TEvent extends AnyBasicPipelineEvent, NewCtx extends {}>(
+  { ctx: prevContext, ...evt }: TEvent,
+  newCtx: NewCtx
+): PipelineEvent<TEvent["name"], TEvent["ctx"] & NewCtx> =>
+  ({
+    ...evt,
+    ctx: {
+      ...prevContext,
+      ...newCtx,
+    },
+  } as unknown as PipelineEvent<TEvent["name"], TEvent["ctx"] & NewCtx>);
 
 type GHToolkitOptions = {
   octokit: ProbotOctokit;
@@ -86,18 +97,22 @@ export const createGHToolkit = ({
 
 type GHToolkit = ReturnType<typeof createGHToolkit>;
 
+type Toolkit = GHToolkitOptions &
+  GHToolkit & {
+    updateCtx: typeof updateCtx;
+  };
+
 export const createToolkit = ({
   octokit,
   repoContext,
-}: GHToolkitOptions): GHToolkitOptions & GHToolkit => {
+}: GHToolkitOptions): Toolkit => {
   return {
     octokit,
     repoContext,
+    updateCtx,
     ...createGHToolkit({ octokit, repoContext }),
   };
 };
-
-type Toolkit = ReturnType<typeof createToolkit>;
 
 type BasicPipelineEvent<
   TName extends EmitterWebhookEventName,
@@ -139,15 +154,3 @@ type UpdateCtx<TEvent, NewCtx> = TEvent extends PipelineEvent<
 >
   ? PipelineEvent<TName, TCtx & NewCtx>
   : never;
-
-const updateCtx = <TEvent extends AnyBasicPipelineEvent, NewCtx extends {}>(
-  { ctx: prevContext, ...evt }: TEvent,
-  newCtx: NewCtx
-): PipelineEvent<TEvent["name"], TEvent["ctx"] & NewCtx> =>
-  ({
-    ...evt,
-    ctx: {
-      ...prevContext,
-      ...newCtx,
-    },
-  } as unknown as PipelineEvent<TEvent["name"], TEvent["ctx"] & NewCtx>);

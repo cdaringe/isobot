@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, Mock } from "vitest";
 import { runInIsolateInfallible } from "../isolate.js";
 import * as eventsFixture from "./fixtures/events.js";
 import { getLogger } from "./fixtures/probot.js";
@@ -29,6 +29,15 @@ const createOnCommentApproveMergeMetaHandlers = (msw: typeof mswMod) =>
         return msw.HttpResponse.json(github.reviews.create);
       case `PUT /repos/owner/repo/pulls/${github.pulls.get.number}/merge`:
         return msw.HttpResponse.json(github.pulls.merge);
+      default:
+        return msw.HttpResponse.json("not found", { status: 404 });
+    }
+  });
+
+const create404Handlers = (msw: typeof mswMod) =>
+  msw.http.all("*", (info) => {
+    const pathname = new URL(info.request.url).pathname;
+    switch (`${info.request.method} ${pathname}`) {
       default:
         return msw.HttpResponse.json("not found", { status: 404 });
     }
@@ -108,4 +117,29 @@ describe("isolate", () => {
       expect(out.error).toMatch(/expected Observable/);
     }
   });
+
+  it(
+    "should yield pipeline events with sane github errors",
+    withMockServer(async (server, { msw }) => {
+      server.use(create404Handlers(msw));
+      server.listen();
+      const logger = getLogger();
+      const out = await runInIsolateInfallible({
+        script: await Code.fromFilename(
+          exampleOnCommentApproveMergeMeta.filename
+        ),
+        pipelineEvent: eventsFixture.asPipelineEvent(
+          eventsFixture.issue_comment_created
+        ),
+        logger,
+      });
+      expect((logger.info as Mock).mock.calls).toMatchInlineSnapshot(`[]`);
+      expect((logger.error as Mock).mock.calls).toMatchInlineSnapshot(`[]`);
+      if (out.isOk()) {
+        expect.fail("invalid pipeline should not have succeeded");
+      } else {
+        expect(out.error.split("\n")[0]).toMatchInlineSnapshot(`"pipeline run failed: HttpError: Not found. May be due to lack of authentication. Reason: Neither "appId"/"privateKey" nor "token" have been set as auth options"`);
+      }
+    })
+  );
 });

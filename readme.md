@@ -1,4 +1,10 @@
-# isobot
+<style type="text/css">
+h1 {
+  display: inline;
+}
+</style>
+
+<h1 style="display: inline-block;"><img src="img/pineskew.opti.svg" width="30px"> isobot</h1>
 
 A probot library and application to make running repo-configurable scripts easy and powerful.
 
