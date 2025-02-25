@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "@octokit/types": "^13.6.2",
-    "@octokit/webhooks": "12.3.1",
+    "@octokit/webhooks": "13.7.4",
     "esbuild": "^0.24.2",
     "p-queue": "^8.0.1",
     "primitivify": "^3.0.2",
@@ -57,7 +57,7 @@
   },
   "pnpm": {
     "overrides": {
-      "@octokit/webhooks": "12.3.1"
+      "@octokit/webhooks": "13.7.4"
     }
   },
   "release": {
