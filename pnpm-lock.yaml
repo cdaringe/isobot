@@ -46,8 +46,8 @@ importers:
         version: 3.11.0
     devDependencies:
       '@dotenvx/dotenvx':
-        specifier: 1.32.0
-        version: 1.32.0
+        specifier: 1.38.2
+        version: 1.38.2
       '@vitest/coverage-istanbul':
         specifier: 2.1.8
         version: 2.1.8(vitest@2.1.8(@types/node@22.10.2)(msw@2.7.0(@types/node@22.10.2)(typescript@5.7.2)))
@@ -155,8 +155,8 @@ packages:
     resolution: {integrity: sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==}
     engines: {node: '>=0.1.90'}
 
-  '@dotenvx/dotenvx@1.32.0':
-    resolution: {integrity: sha512-oQaGYijYfQx6pY9D+FQ08gUOckF1R0RSVK7Jqk+Ma2RyeceoMIawQl1KoogRaJ12i0SmyVWhiGyQxDU01/k13g==}
+  '@dotenvx/dotenvx@1.38.2':
+    resolution: {integrity: sha512-5N2yb92DXS9TVJcY7XTmiGptXfy7jIGJJwWJkQsbKBZDkjFj0ENIBn3/MPk2XMbx4/v6H0cz9JxRDufDRNCV+Q==}
     hasBin: true
 
   '@ecies/ciphers@0.2.2':
@@ -2130,6 +2130,7 @@ packages:
 
   lodash.get@4.4.2:
     resolution: {integrity: sha512-z+Uw/vLuy6gQe8cfaFWD7p0wVv8fJl3mbzXh33RS+0oW2wvUqiRXiQ69gLWSLpgB5/6sU+r6BlQR0MBILadqTQ==}
+    deprecated: This package is deprecated. Use the optional chaining (?.) operator instead.
 
   lodash.includes@4.3.0:
     resolution: {integrity: sha512-W3Bx6mdkRTGtlJISOvVD/lbqjTlPPUDTMnlXZFnVwi9NKJ6tiAk6LVdlhZMm17VZisqhKcgzpO5Wz91PCt5b0w==}
@@ -3522,7 +3523,7 @@ snapshots:
   '@colors/colors@1.5.0':
     optional: true
 
-  '@dotenvx/dotenvx@1.32.0':
+  '@dotenvx/dotenvx@1.38.2':
     dependencies:
       commander: 11.1.0
       dotenv: 16.4.7
