@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@octokit/webhooks': 12.3.1
+  '@octokit/webhooks': 13.7.4
 
 importers:
 
@@ -15,8 +15,8 @@ importers:
         specifier: ^13.6.2
         version: 13.6.2
       '@octokit/webhooks':
-        specifier: 12.3.1
-        version: 12.3.1
+        specifier: 13.7.4
+        version: 13.7.4
       esbuild:
         specifier: ^0.24.2
         version: 0.24.2
@@ -750,6 +750,9 @@ packages:
   '@octokit/openapi-types@22.2.0':
     resolution: {integrity: sha512-QBhVjcUa9W7Wwhm6DBFu6ZZ+1/t/oYxqc2tp81Pi41YNuJinbFRx8B133qVOrAaBbF7D/m0Et6f9/pZt9Rc+tg==}
 
+  '@octokit/openapi-webhooks-types@10.1.1':
+    resolution: {integrity: sha512-qBfqQVIDQaCFeGCofXieJDwvXcGgDn17+UwZ6WW6lfEvGYGreLFzTiaz9xjet9Us4zDf8iasoW3ixUj/R5lMhA==}
+
   '@octokit/plugin-enterprise-compatibility@4.1.0':
     resolution: {integrity: sha512-a8QehVu9Iy4k+m2XgG2rrF4m9vhlRIaefOMr0yJzgQCt4KpiTj5mZVrzSwagyOovkJdD0yDolQazBQZqPWTFSQ==}
     engines: {node: '>= 18'}
@@ -804,6 +807,10 @@ packages:
     resolution: {integrity: sha512-GETXfE05J0+7H2STzekpKObFe765O5dlAKUTLNGeH+x47z7JjXHfsHKo5z21D/o/IOZTUEI6nyWyR+bZVP/n5Q==}
     engines: {node: '>= 18'}
 
+  '@octokit/request-error@6.1.7':
+    resolution: {integrity: sha512-69NIppAwaauwZv6aOzb+VVLwt+0havz9GT5YplkeJv7fG7a40qpLt/yZKyiDxAhgz0EtgNdNcb96Z0u+Zyuy2g==}
+    engines: {node: '>= 18'}
+
   '@octokit/request@6.2.8':
     resolution: {integrity: sha512-ow4+pkVQ+6XVVsekSYBzJC0VTVvh/FCTUUgTsboGq+DTeWdyIFV8WSCdo0RIxk6wSkBTHqIK1mYuY7nOBXOchw==}
     engines: {node: '>= 14'}
@@ -824,15 +831,12 @@ packages:
   '@octokit/types@9.3.2':
     resolution: {integrity: sha512-D4iHGTdAnEEVsB8fl95m1hiz7D5YiRdQ9b/OEb3BYRVwbLsGHcRVPz+u+BgRLNk0Q0/4iZCBqDN96j2XNxfXrA==}
 
-  '@octokit/webhooks-methods@4.1.0':
-    resolution: {integrity: sha512-zoQyKw8h9STNPqtm28UGOYFE7O6D4Il8VJwhAtMHFt2C4L0VQT1qGKLeefUOqHNs1mNRYSadVv7x0z8U2yyeWQ==}
+  '@octokit/webhooks-methods@5.1.1':
+    resolution: {integrity: sha512-NGlEHZDseJTCj8TMMFehzwa9g7On4KJMPVHDSrHxCQumL6uSQR8wIkP/qesv52fXqV1BPf4pTxwtS31ldAt9Xg==}
     engines: {node: '>= 18'}
 
-  '@octokit/webhooks-types@7.6.1':
-    resolution: {integrity: sha512-S8u2cJzklBC0FgTwWVLaM8tMrDuDMVE4xiTK4EYXM9GntyvrdbSoxqDQa+Fh57CCNApyIpyeqPhhFEmHPfrXgw==}
-
-  '@octokit/webhooks@12.3.1':
-    resolution: {integrity: sha512-BVwtWE3rRXB9IugmQTfKspqjNa8q+ab73ddkV9k1Zok3XbuOxJUi4lTYk5zBZDhfWb/Y2H+RO9Iggm25gsqeow==}
+  '@octokit/webhooks@13.7.4':
+    resolution: {integrity: sha512-f386XyLTieQbgKPKS6ZMlH4dq8eLsxNddwofiKRZCq0bZ2gikoFwMD99K6l1oAwqe/KZNzrEziGicRgnzplplQ==}
     engines: {node: '>= 18'}
 
   '@open-draft/deferred-promise@2.2.0':
@@ -2130,6 +2134,7 @@ packages:
 
   lodash.get@4.4.2:
     resolution: {integrity: sha512-z+Uw/vLuy6gQe8cfaFWD7p0wVv8fJl3mbzXh33RS+0oW2wvUqiRXiQ69gLWSLpgB5/6sU+r6BlQR0MBILadqTQ==}
+    deprecated: This package is deprecated. Use the optional chaining (?.) operator instead.
 
   lodash.includes@4.3.0:
     resolution: {integrity: sha512-W3Bx6mdkRTGtlJISOvVD/lbqjTlPPUDTMnlXZFnVwi9NKJ6tiAk6LVdlhZMm17VZisqhKcgzpO5Wz91PCt5b0w==}
@@ -3953,6 +3958,8 @@ snapshots:
 
   '@octokit/openapi-types@22.2.0': {}
 
+  '@octokit/openapi-webhooks-types@10.1.1': {}
+
   '@octokit/plugin-enterprise-compatibility@4.1.0':
     dependencies:
       '@octokit/request-error': 5.1.0
@@ -4011,6 +4018,10 @@ snapshots:
       deprecation: 2.3.1
       once: 1.4.0
 
+  '@octokit/request-error@6.1.7':
+    dependencies:
+      '@octokit/types': 13.6.2
+
   '@octokit/request@6.2.8':
     dependencies:
       '@octokit/endpoint': 7.0.6
@@ -4043,16 +4054,13 @@ snapshots:
     dependencies:
       '@octokit/openapi-types': 18.1.1
 
-  '@octokit/webhooks-methods@4.1.0': {}
+  '@octokit/webhooks-methods@5.1.1': {}
 
-  '@octokit/webhooks-types@7.6.1': {}
-
-  '@octokit/webhooks@12.3.1':
+  '@octokit/webhooks@13.7.4':
     dependencies:
-      '@octokit/request-error': 5.1.0
-      '@octokit/webhooks-methods': 4.1.0
-      '@octokit/webhooks-types': 7.6.1
-      aggregate-error: 3.1.0
+      '@octokit/openapi-webhooks-types': 10.1.1
+      '@octokit/request-error': 6.1.7
+      '@octokit/webhooks-methods': 5.1.1
 
   '@open-draft/deferred-promise@2.2.0': {}
 
@@ -5920,7 +5928,7 @@ snapshots:
       '@octokit/plugin-throttling': 8.2.0(@octokit/core@5.2.0)
       '@octokit/request': 8.4.0
       '@octokit/types': 12.6.0
-      '@octokit/webhooks': 12.3.1
+      '@octokit/webhooks': 13.7.4
       '@probot/get-private-key': 1.1.2
       '@probot/octokit-plugin-config': 2.0.1(@octokit/core@5.2.0)
       '@probot/pino': 2.5.0
