@@ -43,8 +43,8 @@
     "wireit": "0.14.9"
   },
   "dependencies": {
-    "@octokit/types": "^13.6.2",
-    "@octokit/webhooks": "12.3.1",
+    "@octokit/types": "^18.0.0",
+    "@octokit/webhooks": "14.2.0",
     "esbuild": "^0.24.2",
     "p-queue": "^8.0.1",
     "primitivify": "^3.0.2",
@@ -57,7 +57,7 @@
   },
   "pnpm": {
     "overrides": {
-      "@octokit/webhooks": "12.3.1"
+      "@octokit/webhooks": "14.2.0"
     }
   },
   "release": {
